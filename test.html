@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+    <title>KAPU GeoJSON Test</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
+
+    <script src="http://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	
+    <script>
+	
+	var KapuTxTrack=function(str){
+            this.debug=true;
+            this.log("Init KapuTxTrack");
+            this.defaultParams={};
+            this.params={};
+            this.text=str;
+            
+            if( 'string'===typeof str){
+                this.parse(str);
+            }
+            
+            return this;
+	};
+        
+	KapuTxTrack.prototype.log=function(msg){
+            if(this.debug===false){return;}
+            if(typeof console!=="undefined"){console.log("[DEBU] - "+msg);}
+	};
+	
+	KapuTxTrack.prototype.isValid=function(str){
+            if( "string" !== typeof str ){
+                this.log('isValid::Input is not a String');
+                return true;
+            }
+
+            if( "string" !== typeof str ){
+                this.log('isValid::Input is not a String');
+                return true;
+            }
+
+            return true;
+	};
+	
+        /*
+        Data format (64 bytes)
+        - geo (3 bytes)
+        - latitude (12 bytes)
+        - longitude (12 bytes)
+        - others: type ID, description, other useful informations... (37 bytes)
+        */
+        
+        KapuTxTrack.prototype.get=function(key){
+            return this.params[key];
+        };
+    
+	KapuTxTrack.prototype.parseGeo=function(str){
+            if( ! this.isValid(str) ){
+                return false;
+            }
+
+            if( str.length < 27 || ! str.toLowerCase().startsWith('geo') ){
+                this.log('parseGeo::Input is not in the right format');
+                return false;
+            }
+            
+            try{
+                this.params.coords = [
+                        parseFloat(str.substr(3,12)),
+                        parseFloat(str.substr(15,12))
+                ];
+            }catch(err){
+                this.log('parseGeo::Cordinates are not numbers');
+                return false;
+            }
+            
+            return this.params.coords;
+	};
+        
+        KapuTxTrack.prototype.parseInfos=function(str){
+            if( ! this.isValid(str) ){
+                return false;
+            }
+
+            if( str.length < 27 ){
+                this.params.infos = str;
+            }
+            
+            if( str.toLowerCase().startsWith('geo') && str.length>=27) {
+                this.params.infos = str.substring(27);
+            } else {
+                this.params.infos = str;
+            }
+            
+            return this.params.infos;
+	};
+	
+	KapuTxTrack.prototype.parse=function(str){
+            try {
+                delete this.params.coords;
+                delete this.params.infos;
+            }catch(err){}
+            this.parseGeo(str);
+            this.parseInfos(str);
+	};
+	
+	</script>
+	
+    </head>
+    <body>
+
+        <p>
+            <button id="viewTxCoords">View transaction's coordinates</button> | 
+            <button id="viewGeoJSONCoords">View loaded GeoJSON coordinates</button>
+        </p>
+
+        <div id="mapid" style="width: 600px; height: 400px;"></div>
+
+        <p>&nbsp;</p>
+        
+        <p>
+            <table border="1">
+                <thead>
+                    <th>Name</th>
+                    <th>Bytes</th>
+                    <th>Decription</th>
+                </thead>
+                <tbody
+                    <tr>
+                        <td>geo</td>
+                        <td>3</td>
+                        <td>Inizio coordinate geospaziali</td>
+                    </tr>
+                    <tr>
+                        <td>latitude</td>
+                        <td>12</td>
+                        <td>Latitude - <b>must be after 'geo' string</b></td>
+                    </tr>
+                    <tr>
+                        <td>longitude</td>
+                        <td>12</td>
+                        <td>Longitude  - <b>must be after 'latitude' coordinate</b></td>
+                    </tr>
+                    <tr>
+                        <td>others</td>
+                        <td>37</td>
+                        <td>Others datas</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </p>
+        
+        <p>
+            <b>Tx text: </b><input id="txTextValidator" type="text" size="64" value="geo12345.12345612345.123456This is a message"/>
+        </p>
+        
+        <div id="txTextValidatorResult"></div>
+        
+        <script>
+
+            function showMap(map, coords) {
+
+                map.setView(coords, 13);
+
+                L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+                        maxZoom: 18,
+                        /*attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                                '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                                'Imagery © <a href="http://mapbox.com">Mapbox</a>',*/
+                        id: 'mapbox.streets'
+                }).addTo(map);
+
+                L.marker(coords).addTo(map);
+                
+                /*
+                L.circle(geo[51.508, -0.11], 500, {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5
+                }).addTo(map).bindPopup("I am a circle.");
+
+                L.polygon([
+                        [51.509, -0.08],
+                        [51.503, -0.06],
+                        [51.51, -0.047]
+                ]).addTo(map).bindPopup("I am a polygon.");
+
+
+                var popup = L.popup();
+
+                function onMapClick(e) {
+                        popup
+                                .setLatLng(e.latlng)
+                                .setContent("You clicked the map at " + e.latlng.toString())
+                                .openOn(map);
+                }
+
+                map.on('click', onMapClick);
+                */
+            }
+
+            function fromTrx(map) {
+                $.get(
+                        'https://api.kapunode.net/api/transactions/get?id=a803b83486278e95f53783a1015e2eb59304333f6436dc831688bbba958aebc8',
+                        {
+                                nethash:'313ea34c8eb705f79e7bc298b788417ff3f7116c9596f5c9875e769ee2f4ede1',
+                                version: '1.0.1',
+                                port: '4001'
+                        }
+                ).done(
+                        function(data){
+                                console.log(JSON.stringify(data));
+                                showMap(map, [51.508, -0.11]);
+                        }
+                );
+            }
+
+            function fromGeoJSON(map){
+                var geoson_url = 'https://raw.githubusercontent.com/garynobles/data/master/sites.geojson';
+                $.getJSON(geoson_url,{}).done(
+                    function(data){
+                        L.geoJSON(
+                            data
+                            ,{
+                                onEachFeature: function(feature, layer) {
+                                    var popupContent = "<table class=\"featureTable\">" +
+                                                                       "<tr><td><b>ID</b></td><td>"+feature.properties.id+"</td></tr>"+
+                                                                       "<tr><td><b>Site</b></td><td>"+feature.properties.site_name+"</td></tr>"+
+                                                                       "<tr><td><b>Period</b></td><td>"+feature.properties.period+"</td></tr>"+
+                                                                       "<tr><td><b>Type</b></td><td>"+feature.properties.site_type+"</td></tr>"+
+                                                                       "</table>";
+
+                                    layer.bindPopup(popupContent);
+                                }
+                            }
+                        ).addTo(map);
+                    }
+                );
+            }
+            
+            function showValidatorResult(ktt, txTextValidator, txTextValidatorResult){
+                txTextValidatorResult.html('');
+                ktt.parse( txTextValidator.val() );
+
+                var html = '';
+                if( 'Array'===typeof ktt.get('coords') || 'object'===typeof ktt.get('coords') ){
+                    html += '<b>Coordinates:</b>'+JSON.stringify(ktt.get('coords'))+'<br/>';
+                }
+                if( 'string'===typeof ktt.get('infos') ){
+                    html += '<b>Infos:</b>'+JSON.stringify(ktt.get('infos'))+'<br/>';
+                }
+
+                txTextValidatorResult.html( html );
+            }
+
+            $( document ).ready(function() {
+                var map = window.kapuMap = L.map('mapid');
+                fromTrx(map);
+                fromGeoJSON(map);
+
+                $('#viewTxCoords').click(function(){
+                        map.setView([51.508, -0.11], 10);
+                });
+
+                $('#viewGeoJSONCoords').click(function(){
+                        map.setView([52.7655,4.9277], 10);
+                });
+                
+                var txTextValidator = $('#txTextValidator');
+                var txTextValidatorResult = $('#txTextValidatorResult');
+                var ktt = new KapuTxTrack(txTextValidator.val());
+                
+                txTextValidator.bind('keyup', function(e) {
+                    showValidatorResult(ktt, txTextValidator, txTextValidatorResult);
+                });
+                
+                showValidatorResult(ktt, txTextValidator, txTextValidatorResult);
+
+            });
+        </script>
+        
+    </body>
+</html>
