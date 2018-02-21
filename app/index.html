@@ -136,13 +136,12 @@
                             <button type="button" class="btn col-sm-8" id="f_UseBrowserGeo">Get my location</button>
                         </div>
                         <div class="form-group row">
-                            <label for="f_Longitude" class="col-sm-2 col-form-label">Longitude</label>
-                            <input type="text" class="form-control col-sm-10" id="f_Longitude" size="12" maxlength="12" placeholder="Max. 12 chars"/>
-                        </div>
-
-                        <div class="form-group row">
                             <label for="f_Latitude" class="col-sm-2 col-form-label">Latitude</label>
                             <input type="text" class="form-control col-sm-10" id="f_Latitude" size="12" maxlength="12" placeholder="Max. 12 chars"/>
+                        </div>
+                        <div class="form-group row">
+                            <label for="f_Longitude" class="col-sm-2 col-form-label">Longitude</label>
+                            <input type="text" class="form-control col-sm-10" id="f_Longitude" size="12" maxlength="12" placeholder="Max. 12 chars"/>
                         </div>
                         <div class="form-group row">
                             <label for="f_Altitude" class="col-sm-2 col-form-label">Altitude</label>
@@ -204,6 +203,25 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
         <script>
+            
+            function getKapuMapWatermark() {
+                L.Control.Watermark = L.Control.extend({
+                    onAdd: function(map) {
+                        var img = L.DomUtil.create('img');
+                        img.src = './img/map-logo.png';
+                        img.style.width = '60px';
+                        img.style['margin-bottom'] = '-18px';
+                        return img;
+                    },
+                    onRemove: function(map) {
+                        // Nothing to do here
+                    }
+                });
+
+                L.control.watermark = function(opts) {
+                    return new L.Control.Watermark(opts);
+                };
+            }
 
             function showMap(map, coords, infos) {
 
@@ -312,8 +330,19 @@
                     $(this).tab('show');
                 });
                 
+                getKapuMapWatermark(); //init watermark
                 var map = window.kapuMap = L.map('mapid');
+                L.control.watermark({ position: 'bottomleft' }).addTo(map);
                 var trxMapDiv = window.trxMapDiv = L.map('trxMapDiv');
+                L.control.watermark({ position: 'bottomleft' }).addTo(trxMapDiv);
+                
+                trxMapDiv.on('locationfound ',function(_event){
+                    $('#f_Longitude').val( (_event.longitude+'000000000000').substr(0,12));
+                    $('#f_Latitude').val( (_event.latitude+'000000000000').substr(0,12));
+                    $('#f_Altitude').val( ('000000000000').substr(0,12));
+                    showMap(trxMapDiv, [_event.latitude, _event.longitude], "You are here");
+                });
+                
                 var theMap = $('#mapid');
                 fromTrx(map);
                 fromGeoJSON(map);
@@ -361,16 +390,9 @@
                 
                 $('#f_UseBrowserGeo').click(function(){
                     if ("geolocation" in navigator) {
-                        /* geolocation is available */
-                        var geoWatchId = window.geoWatchId = navigator.geolocation.watchPosition(function(position) {
-                            $('#f_Longitude').val( (position.coords.longitude+'000000000000').substr(0,12));
-                            $('#f_Latitude').val( (position.coords.latitude+'000000000000').substr(0,12));
-                            $('#f_Altitude').val('00000.000000');
-                            //do_something(position.coords.latitude, );
-                            navigator.geolocation.clearWatch(window.geoWatchId);
-                        });
+                        trxMapDiv.locate();
                     } else {
-                        /* geolocation IS NOT available */
+                        /*geolocation IS NOT available */
                         alert('Geolocation IS NOT available, check your browser\'s settings');
                     }
                 });
@@ -378,15 +400,13 @@
                 $('#f_UpdateResult').click(function(){
                     var geo='';
                     var msg = $('#f_Message').val();
-                    
-                    
+
                     if( $('#f_UseGeo').is(":checked")){
                         var f_Longitude = ($('#f_Longitude').val()+'000000000000').substr(0,12);
                         var f_Latitude = ($('#f_Latitude').val()+'000000000000').substr(0,12);
                         var f_Altitude = ($('#f_Altitude').val()+'000000000000').substr(0,12);
                         geo = 'geo'+f_Longitude+f_Latitude+f_Altitude;
-                        
-                        
+                            
                         var tmp = new KapuTxTrack();
                         tmp.parse(geo + msg );
                         var coords = tmp.get('coords').slice(0,2);
