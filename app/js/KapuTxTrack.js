@@ -73,8 +73,8 @@ KapuTxTrack.prototype.parseGeo=function(str){
             return false;
         }
         this.log('parseGeo::'+JSON.stringify(matches));
-        this.log('parseGeo::longitude::'+tmp.substr(3,12));
-        this.log('parseGeo::latitude::'+tmp.substr(15,12));
+        this.log('parseGeo::latitude::'+tmp.substr(3,12));
+        this.log('parseGeo::longitude::'+tmp.substr(15,12));
         this.log('parseGeo::altitude::'+tmp.substring(27));
     }
 

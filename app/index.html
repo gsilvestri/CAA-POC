@@ -402,10 +402,10 @@
                     var msg = $('#f_Message').val();
 
                     if( $('#f_UseGeo').is(":checked")){
-                        var f_Longitude = ($('#f_Longitude').val()+'000000000000').substr(0,12);
                         var f_Latitude = ($('#f_Latitude').val()+'000000000000').substr(0,12);
+                        var f_Longitude = ($('#f_Longitude').val()+'000000000000').substr(0,12);
                         var f_Altitude = ($('#f_Altitude').val()+'000000000000').substr(0,12);
-                        geo = 'geo'+f_Longitude+f_Latitude+f_Altitude;
+                        geo = 'geo'+f_Latitude+f_Longitude+f_Altitude;
                             
                         var tmp = new KapuTxTrack();
                         tmp.parse(geo + msg );
