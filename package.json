@@ -1,0 +1,32 @@
+{
+  "name": "geojson_poc",
+  "version": "1.0.0",
+  "description": "GeoJSON POC",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify src/js/app.js -o app/js/bundle.js",
+    "test": "test",
+    "watch": "watchify src/js/app.js -o app/js/bundle.js --debug --verbose",
+    "start": "npm run watch | node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsilvestri/geojson_poc.git"
+  },
+  "keywords": [
+    "GeoJSON",
+    "KAPU"
+  ],
+  "author": "Nicola Boldrin <kapu.research@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gsilvestri/geojson_poc/issues"
+  },
+  "homepage": "https://github.com/gsilvestri/geojson_poc#readme",
+  "dependencies": {
+    "browserify": "^16.1.0",
+    "express": "^4.16.2",
+    "kapujs": "^0.2.3",
+    "watchify": "^3.10.0"
+  }
+}

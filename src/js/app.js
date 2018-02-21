@@ -1,0 +1,1 @@
+window.kapuJS = require("kapujs");
