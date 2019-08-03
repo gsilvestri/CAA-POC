@@ -58,13 +58,13 @@ function showMap(map, coords, infos) {
     */
 }
 
-function fromTrx(map, trxID='eb0cd00281521f241de36a59487b8923c6b2e62894fd411ca3c511a25a958c6d') {
+function fromTrx(map, trxID ='834e0c2c72e6771944fd9d8bab20e623f6d766856e22c048aa863c545aa1b655') {
     $.get(
-        'https://dev.api.kapunode.net/api/transactions/get?id='+trxID,
+        'https://api.kapunode.net/api/transactions/get?id='+trxID,
         {
-            nethash:'f1ef11be7a879671b3019a785c9a2c9dbd9d800b05644d26ad132275ffe2dd48',
-            version: '1.0.1',
-            port: '4001'
+            nethash:'a28cfbd5475471d9c23186976b17a482138de2c6edfc7daf0919a159d2c524e6',
+            version: '2.0.0',
+            port: '9701'
         }
     ).done(
         function(data){
