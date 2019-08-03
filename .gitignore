@@ -3,3 +3,4 @@ package-lock.json
 app/js/bundle.js
 /app/js/bundle.js
 .vs
+testGEO_JSON.txt
