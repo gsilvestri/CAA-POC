@@ -79,6 +79,42 @@ function fromTrx(map, trxID ='834e0c2c72e6771944fd9d8bab20e623f6d766856e22c048aa
     );
 }
 
+function fromVendor(map, vendorSearch='geo%') {
+    var like = '';
+    if(! vendorSearch.startsWith('geo%')){
+        like = 'geo%';
+    }
+    like += vendorSearch + ((!vendorSearch.endsWith('%'))?'%':'');
+    $.get(
+        'https://dev.api.kapunode.net/api/transactions?vendorField='+like,
+        {
+            nethash:'f1ef11be7a879671b3019a785c9a2c9dbd9d800b05644d26ad132275ffe2dd48',
+            version: '1.0.1',
+            port: '4001'
+        }
+    ).done(
+        function(data){
+            console.log(JSON.stringify(data));
+            //showMap(map, [51.508, -0.11]);
+            
+            if(typeof data.transactions === 'object'){
+                for(var i=0; i<data.transactions.length; i++){
+                    var tmp = new KapuTxTrack();
+                    tmp.parse(data.transactions[i].vendorField);
+                    var coords = tmp.get('coords').slice(0,2);
+                    var txt = tmp.get('infos');
+                    showMap(map, coords, txt);
+                }
+            }
+            /*var tmp = new KapuTxTrack();
+            tmp.parse(data.transaction.vendorField);
+            var coords = tmp.get('coords').slice(0,2);
+            var txt = tmp.get('infos');
+            showMap(map, coords, txt);*/
+        }
+    );
+}
+
 function fromGeoJSON(map){
     var geoson_url = 'https://raw.githubusercontent.com/garynobles/data/master/sites.geojson';
     $.getJSON(geoson_url,{}).done(
