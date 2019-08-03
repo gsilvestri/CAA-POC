@@ -27,6 +27,9 @@
     "browserify": "^16.1.0",
     "express": "^4.16.2",
     "kapujs": "^0.2.3",
-    "watchify": "^3.10.0"
+    "watchify": "^3.10.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.0",
+    "winston": "^2.4.0"
   }
 }

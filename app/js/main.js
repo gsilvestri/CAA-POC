@@ -139,9 +139,5 @@ $( document ).ready(function() {
         fromTrx(trxSearchMap,trxID);
     });
 
-    $('#f_ViewFromVendor').click(function(){
-        var vendor = $('#f_FromVendorSearcher').val();
-        fromVendor(trxSearchMap,vendor);
-    });
 });
             
